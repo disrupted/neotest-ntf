@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      # cache: false, because the ntf this pins is a branch archive: the tool's
+      # version string is the branch name, so a cache hit would keep an older
+      # build of it than the branch now holds
+      - uses: jdx/mise-action@v2
+        with:
+          cache: false
+
+      - run: mise run lint
+
+      - run: mise run test

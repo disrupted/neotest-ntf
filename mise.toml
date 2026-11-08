@@ -1,0 +1,26 @@
+[tools]
+neovim = "stable"
+stylua = "latest"
+# ntf's --json support is in the fork until it lands in a release
+"http:ntf" = { version = "feat-json-output", url = "https://github.com/disrupted/ntf/archive/refs/heads/feat/json-output.tar.gz", bin = "bin/ntf" }
+
+[tasks.deps]
+description = "Fetch the adapter's runtime dependencies into .deps/"
+run = """
+mkdir -p .deps
+[ -d .deps/neotest ] || git clone --depth 1 https://github.com/nvim-neotest/neotest .deps/neotest
+[ -d .deps/nvim-nio ] || git clone --depth 1 https://github.com/nvim-neotest/nvim-nio .deps/nvim-nio
+"""
+
+[tasks.test]
+description = "Run the adapter's specs with ntf"
+depends = ["deps"]
+run = "ntf --process-hook=./tests/minimal_init.lua ./tests"
+
+[tasks.lint]
+description = "Check formatting"
+run = "stylua --check lua tests"
+
+[tasks.format]
+description = "Format"
+run = "stylua lua tests"

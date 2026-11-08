@@ -1,0 +1,3 @@
+.deps/
+.test_data/
+nvim.log

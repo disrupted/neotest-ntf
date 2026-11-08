@@ -1,0 +1,79 @@
+*neotest-ntf.txt*       Run ntf specs from inside Neovim
+
+==============================================================================
+CONTENTS                                                    *neotest-ntf*
+
+    1. Requirements ........................ |neotest-ntf-requirements|
+    2. Setup ............................... |neotest-ntf-setup|
+    3. Options ............................. |neotest-ntf-options|
+    4. What a run does ..................... |neotest-ntf-behaviour|
+    5. Known limits ........................ |neotest-ntf-limits|
+
+==============================================================================
+1. REQUIREMENTS                                  *neotest-ntf-requirements*
+
+- Neovim 0.10 or later, and |neotest| with |nvim-nio|.
+- An `ntf` that takes `--json` (see |neotest-ntf-behaviour|).
+- ntf itself runs each test in its own Neovim worker, which needs 0.12 or
+  later: what this adapter runs is that binary, not the editor it sits in.
+
+==============================================================================
+2. SETUP                                                *neotest-ntf-setup*
+
+>lua
+    require('neotest').setup({
+        adapters = {
+            require('neotest-ntf'),
+        },
+    })
+<
+Configured instance, for a project whose ntf or setup differs:
+
+>lua
+    require('neotest').setup({
+        adapters = {
+            require('neotest-ntf')({
+                command = { 'mise', 'exec', '--', 'ntf' },
+                process_hook = './tests/minimal_init.lua',
+            }),
+        },
+    })
+<
+
+==============================================================================
+3. OPTIONS                                            *neotest-ntf-options*
+
+`command`      `string[]`  the ntf executable. Default: `{ 'ntf' }`.
+
+`process_hook` `string`    a Lua module every Neovim process runs before it
+                           loads a spec, which ntf takes as `--process-hook`.
+                           When it is not given, a project's own
+                           `tests/minimal_init.lua` is used if it has one.
+
+`args`         `string[]`  further arguments every command takes.
+
+==============================================================================
+4. WHAT A RUN DOES                                *neotest-ntf-behaviour*
+
+Discovery and results both come from ntf's JSON documents rather than from the
+spec source: `ntf list --json` names every test as the spec declared it, and
+`ntf run --json=FILE` files the run's results. So a name a spec builds at run
+time is the name Neotest runs and reports, with no treesitter query and no
+name mangling.
+
+A run of one test narrows with `--filter`, matching the test's full name; a
+describe narrows to the names below it; a file or a directory runs as it is.
+
+A result carries what its worker printed, so |neotest-output| shows one test's
+output rather than the whole run's; a spec that failed to load is reported as a
+load error on the file.
+
+==============================================================================
+5. KNOWN LIMITS                                        *neotest-ntf-limits*
+
+- ntf reports the line a test is declared on, not the one its describe is, so a
+  namespace is placed at its first test. Jumping to a test is exact.
+- The `dap` strategy is not implemented: ntf debugs a test with its own
+  `--test-hook` and `--jobs=1`, which this adapter does not drive.
+
+vim:tw=78:ts=8:noet:ft=help:norl:
